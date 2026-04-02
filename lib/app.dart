@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
-import 'features/home/home_screen.dart';
+import 'core/features/home/home_screen.dart';
 
 class HumanDetectionApp extends StatelessWidget {
   const HumanDetectionApp({super.key});
