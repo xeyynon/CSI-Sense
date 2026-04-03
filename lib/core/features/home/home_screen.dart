@@ -1,3 +1,4 @@
+import 'package:csi_sense/core/features/history/history_screen.dart';
 import 'package:flutter/material.dart';
 import '../../animations/fade_animation.dart';
 import '../home/live_detection/live_detection_screen.dart';
@@ -21,7 +22,16 @@ class HomeScreen extends StatelessWidget {
           );
         },
       ),
-      GridMenuItem(title: "History", icon: Icons.history, onTap: () {}),
+      GridMenuItem(
+        title: "History",
+        icon: Icons.history,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const HistoryScreen()),
+          );
+        },
+      ),
       GridMenuItem(title: "System Status", icon: Icons.memory, onTap: () {}),
       GridMenuItem(title: "Settings", icon: Icons.settings, onTap: () {}),
     ];

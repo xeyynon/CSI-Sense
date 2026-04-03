@@ -30,10 +30,53 @@ class LiveLayout extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 10),
+
+            /// 🔥 SUBTITLE
+            const Text(
+              "Scanning Environment...",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+
             const SizedBox(height: 20),
 
-            /// 🔥 RADAR (MAIN FOCUS)
-            const Expanded(flex: 5, child: Center(child: RadarView())),
+            /// 🔥 RADAR (CONNECTED TO CONTROLLER)
+            Expanded(
+              flex: 5,
+              child: Center(
+                child: RadarView(
+                  points: controller.points, // ✅ IMPORTANT
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            /// 🔥 STATUS TEXT (UPDATED)
+            DetectionStatusText(
+              hasDetection: controller.hasDetection,
+              distance: controller.currentResult?.distance,
+              activity: controller.currentResult?.activity,
+            ),
+
+            const SizedBox(height: 10),
+
+            /// 🔥 DIVIDER
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(horizontal: 40),
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+
+            const SizedBox(height: 10),
+
+            /// 🔥 CONFIDENCE SCALE
+            ConfidenceScale(
+              value: controller.confidence,
+            ),
 
             const SizedBox(height: 20),
           ],
