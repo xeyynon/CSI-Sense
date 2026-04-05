@@ -23,9 +23,7 @@ class HistoryScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const HistoryRadarScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const HistoryRadarScreen()),
                 );
               },
             ),
@@ -40,9 +38,7 @@ class HistoryScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const HistoryListScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const HistoryListScreen()),
                 );
               },
             ),
@@ -52,10 +48,12 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCard(BuildContext context,
-      {required String title,
-      required IconData icon,
-      required VoidCallback onTap}) {
+  Widget _buildCard(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -63,17 +61,14 @@ class HistoryScreen extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: Colors.white.withValues(alpha: 0.05),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 30),
             const SizedBox(width: 10),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18),
-            ),
+            Text(title, style: const TextStyle(fontSize: 18)),
           ],
         ),
       ),

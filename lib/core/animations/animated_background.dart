@@ -33,9 +33,9 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.black,
-                Colors.green.withValues(alpha: 0.03), // 🔥 VERY subtle
-                Colors.black,
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                Colors.transparent,
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

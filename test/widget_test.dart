@@ -1,30 +1,37 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
-import 'package:csi_sense/main.dart';
+import 'package:csi_sense/app.dart';
+import 'package:csi_sense/core/config/app_settings.dart';
+import 'package:csi_sense/core/features/home/live_detection/controllers/detection_controller.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('App loads Home Screen', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AppSettings()),
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+          ChangeNotifierProxyProvider<AppSettings, DetectionController>(
+            create: (_) => DetectionController(),
+            update: (_, settings, controller) {
+              controller ??= DetectionController();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+              controller.updateMode(settings.mode);
+              controller.updateSensitivity(settings.sensitivity);
+
+              return controller;
+            },
+          ),
+        ],
+        child: const HumanDetectionApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text("Human Detection System"), findsOneWidget);
   });
 }

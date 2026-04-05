@@ -1,4 +1,4 @@
-import 'dart:math'; // ✅ IMPORTANT
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../models/detection_point.dart';
 
@@ -32,7 +32,11 @@ class _DetectionDotWidgetState extends State<DetectionDotWidget>
 
   @override
   Widget build(BuildContext context) {
-    /// ✅ LINEAR RADAR POSITION CALCULATION
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final dotColor = isDark ? Colors.greenAccent : Colors.black;
+
+    /// 📡 POSITION CALCULATION
     final radius = widget.size / 2 * widget.point.y;
     final angle = widget.point.x * pi;
 
@@ -50,16 +54,19 @@ class _DetectionDotWidgetState extends State<DetectionDotWidget>
           return Stack(
             alignment: Alignment.center,
             children: [
-              /// 🔥 RIPPLE EFFECT
+              /// 🔥 RIPPLE
               Container(
                 width: 20 + (_controller.value * 20),
                 height: 20 + (_controller.value * 20),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withValues(
-                      alpha: 1 - _controller.value,
+                    color: dotColor.withValues(
+                      alpha: isDark
+                          ? (1 - _controller.value) * 0.6
+                          : (1 - _controller.value) * 0.8,
                     ),
+                    width: isDark ? 1.5 : 2,
                   ),
                 ),
               ),
@@ -68,8 +75,8 @@ class _DetectionDotWidgetState extends State<DetectionDotWidget>
               Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.white, // ✅ radar is white now
+                decoration: BoxDecoration(
+                  color: dotColor,
                   shape: BoxShape.circle,
                 ),
               ),

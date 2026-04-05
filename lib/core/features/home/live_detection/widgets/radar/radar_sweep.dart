@@ -1,6 +1,7 @@
-import 'dart:math';
 import 'dart:math' as Math;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:csi_sense/core/features/home/live_detection/controllers/detection_controller.dart';
 
 class RadarSweep extends StatefulWidget {
   const RadarSweep({super.key});
@@ -24,18 +25,48 @@ class _RadarSweepState extends State<RadarSweep>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (_, __) {
-        return Transform.rotate(
-          angle: _controller.value * 2 * 3.1416,
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-          child: SizedBox.expand(
-            child: CustomPaint(painter: _SweepPainter(_controller.value)),
-          ),
-        );
-      },
+    final controller = context.watch<DetectionController>();
+
+    if (controller.isConnected) {
+      _controller.stop(); // 🛑 stop animation
+    } else {
+      if (!_controller.isAnimating) {
+        _controller.repeat(); // 🔄 start animation
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<DetectionController>();
+
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 400),
+      opacity: controller.isConnected ? 0 : 1,
+
+      child: IgnorePointer(
+        ignoring: controller.isConnected,
+
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (_, __) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+
+            return Transform.rotate(
+              angle: _controller.value * 2 * Math.pi,
+
+              child: SizedBox.expand(
+                child: CustomPaint(
+                  painter: _SweepPainter(_controller.value, isDark), // ✅ FIX
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -48,26 +79,39 @@ class _RadarSweepState extends State<RadarSweep>
 
 class _SweepPainter extends CustomPainter {
   final double progress;
+  final bool isDark;
 
-  _SweepPainter(this.progress);
+  _SweepPainter(this.progress, this.isDark);
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height);
     final maxRadius = size.width / 2;
 
-    final angle = 3.14 * progress; // move across arc
+    final angle = Math.pi * progress;
+
+    /// 🔥 STRONG COLOR (VISIBLE IN LIGHT MODE)
+    final sweepColor = isDark
+        ? Colors.greenAccent.withOpacity(0.7)
+        : Colors.black.withOpacity(0.85);
+
+    final rect = Rect.fromCircle(center: center, radius: maxRadius);
 
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.6)
-      ..strokeWidth = 3;
+      ..shader = LinearGradient(
+        colors: [sweepColor.withOpacity(0.0), sweepColor],
+      ).createShader(rect)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
 
-    final endX = center.dx + maxRadius * Math.cos(angle + 3.14);
-    final endY = center.dy + maxRadius * Math.sin(angle + 3.14);
+    final endX = center.dx + maxRadius * Math.cos(angle + Math.pi);
+    final endY = center.dy + maxRadius * Math.sin(angle + Math.pi);
 
     canvas.drawLine(center, Offset(endX, endY), paint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _SweepPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.isDark != isDark;
+  }
 }

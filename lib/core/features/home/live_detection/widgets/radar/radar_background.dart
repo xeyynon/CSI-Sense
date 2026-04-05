@@ -6,6 +6,8 @@ class RadarBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -17,7 +19,12 @@ class RadarBackground extends StatelessWidget {
           stops: const [0.1, 1.0],
         ),
       ),
-      child: CustomPaint(painter: RadarPainter(), size: Size.infinite),
+
+      /// 🔥 CUSTOM PAINT HERE
+      child: CustomPaint(
+        painter: RadarPainter(isDark: isDark),
+        child: const SizedBox.expand(), // fills space
+      ),
     );
   }
 }
