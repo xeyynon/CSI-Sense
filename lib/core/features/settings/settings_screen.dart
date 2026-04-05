@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:csi_sense/core/config/app_settings.dart';
 import 'package:csi_sense/core/features/home/live_detection/controllers/detection_controller.dart';
 
-import 'package:csi_sense/core/config/app_settings.dart';
 import 'package:csi_sense/core/config/app_mode.dart';
 
 class SettingsScreen extends StatelessWidget {

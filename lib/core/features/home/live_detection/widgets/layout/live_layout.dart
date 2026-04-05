@@ -6,9 +6,12 @@ import '../../controllers/detection_controller.dart';
 import '../radar/radar_view.dart';
 import '../detection/detection_status_text.dart';
 import '../scale/confidence_scale.dart';
+import '../../models/detection_mode.dart';
 
 class LiveLayout extends StatelessWidget {
-  const LiveLayout({super.key});
+  final DetectionType type;
+
+  const LiveLayout({super.key, required this.type});
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +38,7 @@ class LiveLayout extends StatelessWidget {
             /// 🔥 SUBTITLE
             const Text(
               "Scanning Environment...",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
 
             const SizedBox(height: 20),
@@ -74,9 +74,7 @@ class LiveLayout extends StatelessWidget {
             const SizedBox(height: 10),
 
             /// 🔥 CONFIDENCE SCALE
-            ConfidenceScale(
-              value: controller.confidence,
-            ),
+            ConfidenceScale(value: controller.confidence),
 
             const SizedBox(height: 20),
           ],

@@ -1,10 +1,15 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:csi_sense/core/features/home/live_detection/models/detection_mode.dart';
+
 import '../features/home/live_detection/models/detection_result.dart';
 import 'detection_service.dart';
 
 class OnlineDetectionService implements DetectionService {
+  final DetectionType type;
+
+  OnlineDetectionService(this.type);
   final StreamController<DetectionResult> _controller =
       StreamController.broadcast();
 

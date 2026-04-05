@@ -1,3 +1,4 @@
+import 'package:csi_sense/core/navigation/main_navigation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:csi_sense/core/config/app_settings.dart';
@@ -49,7 +50,7 @@ class HumanDetectionApp extends StatelessWidget {
       /// 🔥 THEME SWITCH
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
 
-      home: const HomeScreen(),
+      home: const MainNavigationScreen(),
     );
   }
 }

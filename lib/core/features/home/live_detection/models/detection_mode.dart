@@ -1,0 +1,1 @@
+enum DetectionType { presence, activity }

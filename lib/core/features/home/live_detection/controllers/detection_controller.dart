@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:csi_sense/core/config/app_settings.dart';
+import 'package:csi_sense/core/features/home/live_detection/models/detection_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -77,8 +78,8 @@ class DetectionController extends ChangeNotifier {
 
     /// 🔥 Create new service
     _service = mode == AppMode.offline
-        ? OfflineDetectionService()
-        : OnlineDetectionService();
+        ? OfflineDetectionService(currentType)
+        : OnlineDetectionService(currentType);
 
     /// 🔥 Restart stream
     _startStream();
@@ -87,6 +88,26 @@ class DetectionController extends ChangeNotifier {
   DetectionSensitivity _sensitivity = DetectionSensitivity.medium;
   void updateSensitivity(DetectionSensitivity sensitivity) {
     _sensitivity = sensitivity;
+  }
+
+  DetectionType currentType = DetectionType.presence;
+
+  void setDetectionType(DetectionType type) {
+    currentType = type;
+
+    /// 🔥 Recreate service with type support
+    _service?.dispose();
+
+    if (_currentMode == AppMode.offline) {
+      _service = OfflineDetectionService(type);
+    } else {
+      _service = OnlineDetectionService(type);
+    }
+
+    /// 🔁 Restart stream
+    _startStream();
+
+    notifyListeners();
   }
 
   // ============================================================

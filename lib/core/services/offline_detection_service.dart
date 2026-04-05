@@ -1,10 +1,15 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:csi_sense/core/features/home/live_detection/models/detection_mode.dart';
+
 import '../features/home/live_detection/models/detection_result.dart';
 import 'detection_service.dart';
 
 class OfflineDetectionService implements DetectionService {
+  final DetectionType type;
+  OfflineDetectionService(this.type);
+
   final Random _random = Random();
 
   final StreamController<DetectionResult> _controller =
