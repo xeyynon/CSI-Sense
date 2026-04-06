@@ -1,3 +1,4 @@
+import 'package:csi_sense/core/features/system_status/system_status_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../features/home/live_detection/Screen/live_detection_screen.dart';
@@ -18,7 +19,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const LiveHomeScreen(),
     const HistoryScreen(),
-    const Center(child: Text("System Status")), // placeholder
+    const SystemStatusScreen(), // placeholder
     const SettingsScreen(),
   ];
 

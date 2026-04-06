@@ -14,21 +14,28 @@ class PresenceDetectionScreen extends StatefulWidget {
 }
 
 class _PresenceDetectionScreenState extends State<PresenceDetectionScreen> {
+  DetectionController? controller;
+  bool initialized = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    Future.microtask(() {
-      final controller = context.read<DetectionController>();
+    if (!initialized) {
+      controller = context.read<DetectionController>();
 
-      controller.setDetectionType(DetectionType.presence);
-      controller.isLiveActive = true;
-    });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller!.setDetectionType(DetectionType.presence);
+        controller!.isLiveActive = true;
+      });
+
+      initialized = true;
+    }
   }
 
   @override
   void dispose() {
-    context.read<DetectionController>().isLiveActive = false;
+    controller?.isLiveActive = false; // ✅ safe
     super.dispose();
   }
 
