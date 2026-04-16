@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:csi_sense/core/config/app_settings.dart';
 
 import '../controllers/detection_controller.dart';
 import '../models/detection_mode.dart';
@@ -23,9 +24,13 @@ class _PresenceDetectionScreenState extends State<PresenceDetectionScreen> {
 
     if (!initialized) {
       controller = context.read<DetectionController>();
+      final settings = context.read<AppSettings>();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        controller!.setDetectionType(DetectionType.presence);
+        controller!.setDetectionType(
+          DetectionType.presence,
+          settings,
+        );
         controller!.isLiveActive = true;
       });
 
@@ -35,7 +40,7 @@ class _PresenceDetectionScreenState extends State<PresenceDetectionScreen> {
 
   @override
   void dispose() {
-    controller?.isLiveActive = false; // ✅ safe
+    controller?.isLiveActive = false;
     super.dispose();
   }
 

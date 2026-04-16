@@ -1,7 +1,6 @@
 import 'package:csi_sense/core/features/system_status/system_status_screen.dart';
 import 'package:flutter/material.dart';
 
-import '../features/home/live_detection/Screen/live_detection_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/home/live_detection/Screen/live_home_screen.dart';

@@ -2,6 +2,8 @@ import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:csi_sense/core/features/home/live_detection/controllers/detection_controller.dart';
+import 'package:csi_sense/core/config/app_settings.dart';
+import 'package:csi_sense/core/config/app_mode.dart';
 
 class RadarSweep extends StatefulWidget {
   const RadarSweep({super.key});
@@ -25,30 +27,31 @@ class _RadarSweepState extends State<RadarSweep>
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final controller = context.watch<DetectionController>();
-
-    if (controller.isConnected) {
-      _controller.stop(); // 🛑 stop animation
-    } else {
-      if (!_controller.isAnimating) {
-        _controller.repeat(); // 🔄 start animation
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final controller = context.watch<DetectionController>();
+    final settings = context.watch<AppSettings>();
+
+    final isOnline = settings.mode == AppMode.online;
+
+    /// ✅ STRICT CONDITION
+    final shouldAnimate =
+        isOnline && !controller.apiConnected && !controller.isOfflineMode;
+
+    /// 🔥 CONTROL ANIMATION
+    if (shouldAnimate) {
+      if (!_controller.isAnimating) {
+        _controller.repeat();
+      }
+    } else {
+      _controller.stop();
+    }
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
-      opacity: controller.isConnected ? 0 : 1,
+      opacity: shouldAnimate ? 1 : 0,
 
       child: IgnorePointer(
-        ignoring: controller.isConnected,
+        ignoring: !shouldAnimate,
 
         child: AnimatedBuilder(
           animation: _controller,
@@ -57,10 +60,9 @@ class _RadarSweepState extends State<RadarSweep>
 
             return Transform.rotate(
               angle: _controller.value * 2 * Math.pi,
-
               child: SizedBox.expand(
                 child: CustomPaint(
-                  painter: _SweepPainter(_controller.value, isDark), // ✅ FIX
+                  painter: _SweepPainter(_controller.value, isDark),
                 ),
               ),
             );
@@ -77,6 +79,7 @@ class _RadarSweepState extends State<RadarSweep>
   }
 }
 
+/// 🎨 SWEEP PAINTER
 class _SweepPainter extends CustomPainter {
   final double progress;
   final bool isDark;
@@ -90,7 +93,6 @@ class _SweepPainter extends CustomPainter {
 
     final angle = Math.pi * progress;
 
-    /// 🔥 STRONG COLOR (VISIBLE IN LIGHT MODE)
     final sweepColor = isDark
         ? Colors.greenAccent.withOpacity(0.7)
         : Colors.black.withOpacity(0.85);

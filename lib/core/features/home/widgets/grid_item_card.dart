@@ -10,7 +10,7 @@ class GridItemCard extends StatefulWidget {
     super.key,
     required this.title,
     required this.icon,
-    required this.onTap,
+    required this.onTap, required bool isHistory,
   });
 
   @override

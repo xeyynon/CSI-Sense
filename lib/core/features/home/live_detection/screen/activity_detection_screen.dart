@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/detection_controller.dart';
 import '../models/detection_mode.dart';
 import '../widgets/layout/live_layout.dart';
+import 'package:csi_sense/core/config/app_settings.dart';
 
 class ActivityDetectionScreen extends StatefulWidget {
   const ActivityDetectionScreen({super.key});
@@ -23,9 +24,10 @@ class _ActivityDetectionScreenState extends State<ActivityDetectionScreen> {
 
     if (!initialized) {
       controller = context.read<DetectionController>();
+      final settings = context.read<AppSettings>();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        controller!.setDetectionType(DetectionType.activity);
+        controller!.setDetectionType(DetectionType.activity, settings);
         controller!.isLiveActive = true;
       });
 

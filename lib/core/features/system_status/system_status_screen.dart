@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../home/live_detection/controllers/detection_controller.dart';
+import '../../config/app_settings.dart';
+import '../../config/app_mode.dart';
 
 class SystemStatusScreen extends StatelessWidget {
   const SystemStatusScreen({super.key});
@@ -8,26 +11,91 @@ class SystemStatusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<DetectionController>();
+    final settings = context.watch<AppSettings>();
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final TextEditingController apiController = TextEditingController(
+      text: settings.apiBaseUrl,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text("System Status"), centerTitle: true),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            /// 📡 CONNECTION STATUS
+            /// 🔥 API CONNECTION (MAIN)
             _buildCard(
-              title: "Connection",
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              title: "API Connection",
+              child: Column(
                 children: [
-                  const Text("API Status"),
-                  _statusChip(
-                    controller.isConnected ? "Connected" : "Disconnected",
-                    controller.isConnected ? Colors.green : Colors.red,
+                  TextField(
+                    controller: apiController,
+                    decoration: const InputDecoration(
+                      labelText: "API Base URL",
+                      hintText: "http://192.168.x.x:5000",
+                      border: OutlineInputBorder(),
+                    ),
                   ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.save),
+                          label: const Text("Save"),
+                          onPressed: () {
+                            settings.updateApiUrl(apiController.text.trim());
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("API URL Saved")),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.refresh),
+                          label: const Text("Reconnect"),
+                          onPressed: () {
+                            controller.updateMode(settings.mode, settings);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Reconnecting...")),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// 🔥 STATUS
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Connection Status"),
+                      _statusChip(
+                        controller.apiConnected ? "Connected" : "Disconnected",
+                        controller.apiConnected ? Colors.green : Colors.red,
+                      ),
+                    ],
+                  ),
+
+                  /// 🔥 COUNTDOWN
+                  if (!controller.apiConnected &&
+                      settings.mode == AppMode.online)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        "Switching to offline in ${controller.remainingSeconds}s",
+                        style: const TextStyle(color: Colors.redAccent),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -39,11 +107,7 @@ class SystemStatusScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text("Detection Mode"),
-                  Text(
-                    controller.runtimeType.toString().contains("Offline")
-                        ? "Offline"
-                        : "Online",
-                  ),
+                  Text(settings.mode.name.toUpperCase()),
                 ],
               ),
             ),
@@ -69,8 +133,12 @@ class SystemStatusScreen extends StatelessWidget {
               child: Column(
                 children: [
                   _infoRow(
-                    "Total Detections",
-                    controller.history.length.toString(),
+                    "Presence Records",
+                    controller.presenceHistory.length.toString(),
+                  ),
+                  _infoRow(
+                    "Activity Records",
+                    controller.activityHistory.length.toString(),
                   ),
                   _infoRow(
                     "Confidence",
@@ -85,15 +153,6 @@ class SystemStatusScreen extends StatelessWidget {
                         "N/A",
                   ),
                 ],
-              ),
-            ),
-
-            /// 💾 STORAGE
-            _buildCard(
-              title: "Storage",
-              child: _infoRow(
-                "Saved Records",
-                controller.history.length.toString(),
               ),
             ),
           ],
@@ -134,7 +193,7 @@ class SystemStatusScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(text, style: TextStyle(color: color)),

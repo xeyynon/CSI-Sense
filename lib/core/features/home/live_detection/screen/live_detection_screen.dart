@@ -5,6 +5,7 @@ import '../widgets/layout/live_layout.dart';
 import '../../../../animations/swipe_back_wrapper.dart';
 import '../controllers/detection_controller.dart';
 import '../models/detection_mode.dart';
+import 'package:csi_sense/core/config/app_settings.dart';
 
 class LiveDetectionScreen extends StatefulWidget {
   final DetectionType type;
@@ -20,16 +21,18 @@ class _LiveDetectionScreenState extends State<LiveDetectionScreen> {
   DetectionType currentType = DetectionType.presence;
 
   @override
+  @override
   void initState() {
     super.initState();
 
     Future.microtask(() {
       final c = context.read<DetectionController>();
+      final settings = context.read<AppSettings>(); // ✅ ADD THIS
 
-      c.setDetectionType(widget.type);
+      c.setDetectionType(widget.type, settings); // ✅ FIX
       c.isLiveActive = true;
 
-      controller = c; // ✅ assign safely
+      controller = c;
     });
   }
 

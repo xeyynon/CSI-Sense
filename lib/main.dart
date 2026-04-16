@@ -10,6 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Hive.initFlutter();
+  await Hive.openBox('settings');
   await Hive.openBox('history');
 
   runApp(
@@ -17,7 +18,11 @@ void main() async {
       providers: [
         /// 🔥 GLOBAL SETTINGS
         ChangeNotifierProvider(
-          create: (_) => AppSettings(),
+          create: (_) {
+            final settings = AppSettings();
+            settings.init(); // ✅ LOAD SAVED API URL
+            return settings;
+          },
         ),
 
         /// 🔥 DETECTION CONTROLLER (depends on settings)
@@ -27,8 +32,10 @@ void main() async {
             controller ??= DetectionController();
 
             /// 🔥 APPLY SETTINGS TO CONTROLLER
-            controller.updateMode(settings.mode);
+            controller.updateMode(settings.mode, settings);
+            controller.setDetectionType(controller.currentType, settings);
             controller.updateSensitivity(settings.sensitivity);
+            controller.startDetection();
 
             return controller;
           },

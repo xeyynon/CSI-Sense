@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import 'package:csi_sense/core/config/app_settings.dart';
 import 'package:csi_sense/core/features/home/live_detection/controllers/detection_controller.dart';
-
 import 'package:csi_sense/core/config/app_mode.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -14,8 +13,13 @@ class SettingsScreen extends StatelessWidget {
     final settings = context.watch<AppSettings>();
     final controller = context.read<DetectionController>();
 
+    final TextEditingController apiController = TextEditingController(
+      text: settings.apiBaseUrl,
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text("Settings"), centerTitle: true),
+
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -32,6 +36,7 @@ class SettingsScreen extends StatelessWidget {
           /// 📡 DETECTION
           _section("Detection"),
 
+          /// 🔥 MODE
           ListTile(
             title: const Text("Mode"),
             trailing: DropdownButton<AppMode>(
@@ -43,11 +48,15 @@ class SettingsScreen extends StatelessWidget {
                 );
               }).toList(),
               onChanged: (value) {
-                if (value != null) settings.setMode(value);
+                if (value != null) {
+                  settings.setMode(value);
+                  controller.updateMode(value, settings); // ✅ important
+                }
               },
             ),
           ),
 
+          /// 🔥 SENSITIVITY
           ListTile(
             title: const Text("Sensitivity"),
             trailing: DropdownButton<DetectionSensitivity>(
@@ -59,9 +68,77 @@ class SettingsScreen extends StatelessWidget {
                 );
               }).toList(),
               onChanged: (value) {
-                if (value != null) settings.setSensitivity(value);
+                if (value != null) {
+                  settings.setSensitivity(value);
+                  controller.updateSensitivity(value);
+                }
               },
             ),
+          ),
+
+          const SizedBox(height: 16),
+
+          /// 🌐 API CONNECTION
+          _section("API Connection"),
+
+          TextField(
+            controller: apiController,
+            decoration: const InputDecoration(
+              labelText: "API Base URL",
+              hintText: "http://192.168.x.x:5000",
+              border: OutlineInputBorder(),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          ElevatedButton.icon(
+            icon: const Icon(Icons.save),
+            label: const Text("Save API URL"),
+            onPressed: () {
+              settings.updateApiUrl(apiController.text.trim());
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text("API URL saved")));
+            },
+          ),
+
+          const SizedBox(height: 10),
+
+          /// 🔥 API STATUS
+          ListTile(
+            title: const Text("API Status"),
+            subtitle: Text(
+              controller.apiConnected ? "Connected" : "Disconnected",
+              style: TextStyle(
+                color: controller.apiConnected ? Colors.green : Colors.red,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          /// 🔥 OFFLINE SWITCH CONTROL (NEW)
+          _section("Connection Control"),
+
+          Text("Offline Switch Delay: ${settings.offlineSwitchDelay}s"),
+
+          Slider(
+            value: settings.offlineSwitchDelay.toDouble(),
+            min: 10,
+            max: 30,
+            divisions: 20,
+            label: "${settings.offlineSwitchDelay}s",
+            onChanged: (value) {
+              settings.setOfflineSwitchDelay(value.toInt());
+            },
+          ),
+
+          const SizedBox(height: 8),
+
+          const Text(
+            "Auto switch to offline if API fails",
+            style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
 
           const SizedBox(height: 16),
@@ -82,8 +159,8 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           ElevatedButton.icon(
-            onPressed: () async {
-              await controller.clearHistory();
+            onPressed: () {
+              controller.clearHistory();
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(const SnackBar(content: Text("History cleared")));
@@ -107,14 +184,16 @@ class SettingsScreen extends StatelessWidget {
                 DropdownMenuItem(value: 2.0, child: Text("2x")),
               ],
               onChanged: (value) {
-                if (value != null) settings.setReplaySpeed(value);
+                if (value != null) {
+                  settings.setReplaySpeed(value);
+                }
               },
             ),
           ),
 
           const SizedBox(height: 16),
 
-          /// 🔔 NOTIFICATIONS
+          /// 🔔 SOUND
           _section("Notifications"),
 
           SwitchListTile(
@@ -129,11 +208,11 @@ class SettingsScreen extends StatelessWidget {
           _section("System"),
 
           ListTile(
-            title: const Text("Status"),
+            title: const Text("Live Status"),
             subtitle: Text(controller.isLiveActive ? "ACTIVE" : "IDLE"),
           ),
 
-          const ListTile(title: Text("Version"), subtitle: Text("0.0.0")),
+          const ListTile(title: Text("Version"), subtitle: Text("1.0.0")),
         ],
       ),
     );

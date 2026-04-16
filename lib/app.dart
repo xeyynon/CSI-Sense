@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:csi_sense/core/config/app_settings.dart';
 
-import 'core/features/home/home_screen.dart';
 
 class HumanDetectionApp extends StatelessWidget {
   const HumanDetectionApp({super.key});
