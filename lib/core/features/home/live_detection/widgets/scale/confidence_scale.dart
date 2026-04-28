@@ -9,12 +9,37 @@ class ConfidenceScale extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formattedValue = value.clamp(0, 100).toStringAsFixed(0);
+
     return Column(
       children: [
-        const Text("Detection Confidence"),
+        /// 🔥 TITLE + VALUE
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Detection Confidence",
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            Text(
+              "$formattedValue%",
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.greenAccent,
+              ),
+            ),
+          ],
+        ),
+
         const SizedBox(height: 8),
+
+        /// 🔥 BAR
         ScaleBar(value: value),
-        const SizedBox(height: 8),
+
+        const SizedBox(height: 6),
+
+        /// 🔥 LABEL (Low / Medium / High)
         ScaleLabel(value: value),
       ],
     );

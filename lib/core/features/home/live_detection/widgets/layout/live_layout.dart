@@ -4,27 +4,52 @@ import 'package:provider/provider.dart';
 
 import '../../controllers/detection_controller.dart';
 import '../radar/radar_view.dart';
-import '../radar/radar_sweep.dart'; // ✅ ADD THIS
+import '../radar/radar_sweep.dart';
 import '../detection/detection_status_text.dart';
 import '../scale/confidence_scale.dart';
 import '../../models/detection_mode.dart';
 import 'package:csi_sense/core/config/app_settings.dart';
 
-class LiveLayout extends StatelessWidget {
+class LiveLayout extends StatefulWidget {
   final DetectionType type;
 
   const LiveLayout({super.key, required this.type});
 
   @override
+  State<LiveLayout> createState() => _LiveLayoutState();
+}
+
+class _LiveLayoutState extends State<LiveLayout> {
+  late DetectionController controller;
+
+  @override
+  @override
+  void initState() {
+    super.initState();
+
+    controller = context.read<DetectionController>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final settings = context.read<AppSettings>();
+
+      controller.setDetectionType(widget.type, settings); // ✅ SAFE NOW
+      controller.isLiveActive = true;
+      controller.startDetection();
+    });
+  }
+
+  @override
+  void dispose() {
+    // ✅ DO NOT use context here
+    controller.isLiveActive = false; // 🔥 stop storing history
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = context.watch<DetectionController>();
     final settings = context.watch<AppSettings>();
-
-    /// 🔊 SOUND TRIGGER (basic hook)
-    if (settings.soundEnabled && controller.hasDetection) {
-      // TODO: integrate audio player here
-      // (we will plug real sound next step)
-    }
 
     final isOnline = settings.mode.name == "online";
 
@@ -79,10 +104,8 @@ class LiveLayout extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  /// ✅ RADAR ALWAYS VISIBLE
                   RadarView(points: controller.points),
 
-                  /// 🔥 SWEEP (ONLY WHEN API DISCONNECTED)
                   if (!controller.apiConnected && isOnline) const RadarSweep(),
                 ],
               ),
@@ -92,9 +115,11 @@ class LiveLayout extends StatelessWidget {
 
             /// 🔥 STATUS TEXT
             DetectionStatusText(
-              hasDetection: controller.hasDetection,
-              distance: controller.currentResult?.distance,
-              activity: controller.currentResult?.activity,
+              hasDetection: widget.type == DetectionType.presence
+                  ? controller.hasDetection
+                  : (controller.currentResult?.activity ?? 0) != 0,
+              result: controller.currentResult,
+              type: widget.type,
             ),
 
             const SizedBox(height: 10),

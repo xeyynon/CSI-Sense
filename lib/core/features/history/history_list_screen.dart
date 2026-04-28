@@ -5,25 +5,9 @@ import '../home/live_detection/controllers/detection_controller.dart';
 import '../home/live_detection/models/detection_mode.dart';
 
 class HistoryListScreen extends StatelessWidget {
-  final DetectionType type; // ✅ ADD
+  final DetectionType type;
 
-  const HistoryListScreen({
-    super.key,
-    required this.type, // ✅ ADD
-  });
-
-  String getActivityText(int activity) {
-    switch (activity) {
-      case 1:
-        return "Walking";
-      case 2:
-        return "Walking + Arm Waving";
-      case 3:
-        return "Running";
-      default:
-        return "No Activity";
-    }
-  }
+  const HistoryListScreen({super.key, required this.type});
 
   @override
   Widget build(BuildContext context) {
@@ -50,27 +34,33 @@ class HistoryListScreen extends StatelessWidget {
                 final item = history[i];
 
                 return ListTile(
+                  /// 🔥 ICON FIX
                   leading: Icon(
-                    item.hasPresence ? Icons.person : Icons.person_off,
-                    color: item.hasPresence ? Colors.greenAccent : Colors.grey,
+                    type == DetectionType.presence
+                        ? (item.hasPresence ? Icons.person : Icons.person_off)
+                        : Icons.directions_run,
+                    color: type == DetectionType.presence
+                        ? (item.hasPresence ? Colors.greenAccent : Colors.grey)
+                        : Colors.orangeAccent,
                   ),
 
+                  /// 🔥 TITLE FIX
                   title: type == DetectionType.presence
                       ? Text(
                           item.hasPresence
-                              ? "Presence at ${item.distance.toStringAsFixed(1)}m"
+                              ? "Presence at ${item.distance.toStringAsFixed(1)} m"
                               : "No Presence",
                         )
-                      : Text(getActivityText(item.activity)),
-
+                      : Text(item.label), // ✅ USE API LABEL
+                  /// 🔥 CONFIDENCE
                   subtitle: Text(
                     "Confidence: ${item.confidence.toStringAsFixed(1)}%",
                   ),
 
+                  /// 🔥 TIME (CLEAN FORMAT)
                   trailing: Text(
-                    "${item.timestamp.hour.toString().padLeft(2, '0')}:"
-                    "${item.timestamp.minute.toString().padLeft(2, '0')}:"
-                    "${item.timestamp.second.toString().padLeft(2, '0')}",
+                    TimeOfDay.fromDateTime(item.timestamp).format(context),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 );
               },

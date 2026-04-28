@@ -17,18 +17,19 @@ class DetectionFailureManager {
 
     isCountingDown = true;
 
-    /// ✅ USE DYNAMIC VALUE
     remainingSeconds = settings.offlineSwitchDelay;
 
     countdownTimer?.cancel();
+    countdownTimer = null;
 
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      remainingSeconds--;
+      remainingSeconds = (remainingSeconds - 1).clamp(0, 9999);
 
       onTick();
 
       if (remainingSeconds <= 0) {
         timer.cancel();
+        countdownTimer = null;
         isCountingDown = false;
 
         settings.setMode(AppMode.offline);
@@ -39,6 +40,7 @@ class DetectionFailureManager {
 
   void stop() {
     countdownTimer?.cancel();
+    countdownTimer = null;
     isCountingDown = false;
     remainingSeconds = 0;
   }

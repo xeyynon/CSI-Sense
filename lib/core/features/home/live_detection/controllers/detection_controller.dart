@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../../../../../../core/config/app_mode.dart';
 import '../../../../../../core/config/app_settings.dart';
@@ -14,21 +17,95 @@ import 'managers/detection_state_manager.dart';
 import 'managers/detection_history_manager.dart';
 import 'managers/detection_failure_manager.dart';
 
+enum ConnectionStateStatus { connected, connecting, disconnected }
+
 class DetectionController extends ChangeNotifier {
   final streamManager = DetectionStreamManager();
   final stateManager = DetectionStateManager();
   final historyManager = DetectionHistoryManager();
   final failureManager = DetectionFailureManager();
 
+  ConnectionStateStatus connectionState = ConnectionStateStatus.disconnected;
+
   DetectionType currentType = DetectionType.presence;
+  DetectionType? _lastStartedType; // 🔥 IMPORTANT FIX
 
   bool isLiveActive = false;
   bool apiConnected = true;
+  bool get isPinging => stateManager.isPinging;
 
   Duration historyDuration = const Duration(minutes: 5);
 
   AppMode _currentMode = AppMode.online;
   late AppSettings _settings;
+
+  // ============================================================
+  // 🌐 CONNECTION CHECK
+  // ============================================================
+
+  void startConnecting(AppSettings settings) {
+    connectionState = ConnectionStateStatus.connecting;
+    notifyListeners();
+
+    int maxSeconds = settings.offlineSwitchDelay;
+    int elapsed = 0;
+
+    Timer.periodic(const Duration(seconds: 1), (timer) async {
+      elapsed++;
+
+      try {
+        final response = await http
+            .get(Uri.parse("${settings.apiBaseUrl}/latest/presence"))
+            .timeout(const Duration(seconds: 3));
+
+        if (response.statusCode == 200) {
+          connectionState = ConnectionStateStatus.connected;
+          apiConnected = true;
+
+          timer.cancel();
+
+          settings.setMode(AppMode.online);
+          updateMode(AppMode.online, settings);
+
+          notifyListeners();
+          return;
+        }
+      } catch (_) {}
+
+      if (elapsed >= maxSeconds) {
+        connectionState = ConnectionStateStatus.disconnected;
+        apiConnected = false;
+
+        timer.cancel();
+
+        settings.setMode(AppMode.offline);
+        updateMode(AppMode.offline, settings);
+
+        notifyListeners();
+      }
+    });
+  }
+
+  void connect(AppSettings settings) {
+    apiConnected = true;
+    failureManager.stop();
+    updateMode(AppMode.online, settings);
+    notifyListeners();
+  }
+
+  void disconnect() {
+    apiConnected = false;
+    streamManager.stop();
+    failureManager.stop();
+    notifyListeners();
+  }
+
+  void retry(AppSettings settings) {
+    disconnect();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      connect(settings);
+    });
+  }
 
   // ============================================================
   // 🚀 START
@@ -39,19 +116,30 @@ class DetectionController extends ChangeNotifier {
   }
 
   // ============================================================
-  // 🔁 MODE
+  // 🔁 MODE (🔥 FIXED)
   // ============================================================
 
   void updateMode(AppMode mode, AppSettings settings) {
     _settings = settings;
 
-    if (_currentMode == mode && streamManager.isRunning) return;
+    // 🔥 Skip ONLY if BOTH mode AND type same
+    if (_currentMode == mode &&
+        streamManager.isRunning &&
+        _lastStartedType == currentType) {
+      return;
+    }
 
     _currentMode = mode;
+
+    // 🔥 ALWAYS stop old stream
+    streamManager.stop();
 
     final service = mode == AppMode.offline
         ? OfflineDetectionService(currentType)
         : OnlineDetectionService(currentType, settings);
+
+    // 🔥 track last type
+    _lastStartedType = currentType;
 
     streamManager.start(service: service, onData: _onData, onError: _onError);
 
@@ -59,11 +147,15 @@ class DetectionController extends ChangeNotifier {
   }
 
   // ============================================================
-  // 🔄 TYPE
+  // 🔄 TYPE (🔥 FIXED)
   // ============================================================
 
   void setDetectionType(DetectionType type, AppSettings settings) {
+    if (currentType == type) return;
+
     currentType = type;
+
+    // 🔥 Force restart via updateMode
     updateMode(_currentMode, settings);
   }
 
@@ -74,15 +166,13 @@ class DetectionController extends ChangeNotifier {
   void _onData(DetectionResult result) {
     if (!isLiveActive) return;
 
-    /// ✅ ONLY ONLINE MODE CONTROLS CONNECTION
     if (_currentMode == AppMode.online) {
-      if (result.confidence > 0) {
-        apiConnected = true;
-        failureManager.stop(); // 🔥 stop countdown
-      }
+      apiConnected = true;
+      failureManager.stop();
     }
 
     stateManager.update(result, currentType);
+
     historyManager.add(result, currentType, historyDuration);
 
     notifyListeners();
@@ -93,12 +183,10 @@ class DetectionController extends ChangeNotifier {
 
     apiConnected = false;
 
-    /// 🔥 CLEAR RADAR
     stateManager.points = <DetectionPoint>[];
     stateManager.confidence = 0;
     stateManager.currentResult = null;
 
-    /// 🔥 START COUNTDOWN (ONLY ONCE)
     if (!failureManager.isCountingDown) {
       failureManager.start(
         settings: _settings,
@@ -117,7 +205,6 @@ class DetectionController extends ChangeNotifier {
   // ============================================================
 
   List<DetectionResult> get presenceHistory => historyManager.presenceHistory;
-
   List<DetectionResult> get activityHistory => historyManager.activityHistory;
 
   void clearHistory() {
@@ -141,9 +228,7 @@ class DetectionController extends ChangeNotifier {
   // ============================================================
 
   List<DetectionPoint> get points => stateManager.points;
-
   double get confidence => stateManager.confidence;
-
   DetectionResult? get currentResult => stateManager.currentResult;
 
   bool get hasDetection => stateManager.points.isNotEmpty;

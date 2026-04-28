@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../home/widgets/grid_menu.dart';
 import '../home/widgets/grid_menu_item.dart';
+import '../home/live_detection/models/detection_mode.dart'; // ✅ IMPORTANT
 import 'presence_history_screen.dart';
 import 'activity_history_screen.dart';
 
@@ -17,7 +18,11 @@ class HistoryScreen extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const PresenceHistoryScreen()),
+            MaterialPageRoute(
+              builder: (_) => PresenceHistoryScreen(
+                type: DetectionType.presence, // ✅ FIX
+              ),
+            ),
           );
         },
       ),
@@ -27,7 +32,11 @@ class HistoryScreen extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ActivityHistoryScreen()),
+            MaterialPageRoute(
+              builder: (_) => ActivityHistoryScreen(
+                type: DetectionType.activity, // ✅ FIX
+              ),
+            ),
           );
         },
       ),
@@ -35,7 +44,7 @@ class HistoryScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text("History"), centerTitle: true),
-      body: GridMenu(items: items), // ✅ same grid
+      body: GridMenu(items: items),
     );
   }
 }

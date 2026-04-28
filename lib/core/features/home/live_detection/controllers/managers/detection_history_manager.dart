@@ -33,6 +33,9 @@ class DetectionHistoryManager {
     DetectionType type,
     Duration historyDuration,
   ) {
+    final now = DateTime.now();
+    final cutoff = now.subtract(historyDuration);
+
     /// 🔥 GLOBAL HISTORY
     _history.add(result);
 
@@ -43,19 +46,16 @@ class DetectionHistoryManager {
       activityHistory.add(result);
     }
 
-    /// ⏱ TIME FILTER
-    final cutoff = DateTime.now().subtract(historyDuration);
-
+    /// ⏱ FILTER OLD DATA
     _history.removeWhere((e) => e.timestamp.isBefore(cutoff));
     presenceHistory.removeWhere((e) => e.timestamp.isBefore(cutoff));
     activityHistory.removeWhere((e) => e.timestamp.isBefore(cutoff));
 
-    /// 🔥 LIMIT SIZE (avoid memory overflow)
+    /// 🔥 LIMIT SIZE
     const maxItems = 300;
-
-    if (_history.length > maxItems) _history.removeAt(0);
-    if (presenceHistory.length > maxItems) presenceHistory.removeAt(0);
-    if (activityHistory.length > maxItems) activityHistory.removeAt(0);
+    _trimList(_history, maxItems);
+    _trimList(presenceHistory, maxItems);
+    _trimList(activityHistory, maxItems);
 
     /// 💾 SAVE TO HIVE
     _box.add({
@@ -65,20 +65,26 @@ class DetectionHistoryManager {
       'confidence': result.confidence,
       'timestamp': result.timestamp.toIso8601String(),
       'type': type.name,
+      'label': result.label, // ✅ IMPORTANT
     });
 
-    /// 🔥 CLEAN OLD HIVE DATA
+    /// 🧹 CLEAN OLD HIVE DATA
     final keysToDelete = _box.keys.where((key) {
       final item = _box.get(key);
 
       if (item == null || item['timestamp'] == null) return false;
 
-      final time = DateTime.parse(item['timestamp']);
-      return time.isBefore(cutoff);
-      return time.isBefore(cutoff);
+      try {
+        final time = DateTime.parse(item['timestamp']);
+        return time.isBefore(cutoff);
+      } catch (_) {
+        return true; // remove corrupted data
+      }
     }).toList();
 
-    _box.deleteAll(keysToDelete);
+    if (keysToDelete.isNotEmpty) {
+      _box.deleteAll(keysToDelete);
+    }
   }
 
   // ============================================================
@@ -87,15 +93,20 @@ class DetectionHistoryManager {
 
   void loadFromStorage() {
     final data = _box.values.toList()
-      ..sort(
-        (a, b) => DateTime.parse(
-          a['timestamp'],
-        ).compareTo(DateTime.parse(b['timestamp'])),
-      );
+      ..sort((a, b) {
+        try {
+          return DateTime.parse(
+            a['timestamp'],
+          ).compareTo(DateTime.parse(b['timestamp']));
+        } catch (_) {
+          return 0;
+        }
+      });
 
     _history.clear();
     presenceHistory.clear();
     activityHistory.clear();
+
     for (var item in data) {
       try {
         final result = DetectionResult(
@@ -104,17 +115,18 @@ class DetectionHistoryManager {
           distance: (item['distance'] ?? 0).toDouble(),
           confidence: (item['confidence'] ?? 0).toDouble(),
           timestamp: DateTime.parse(item['timestamp']),
+          label: item['label'] ?? "", // ✅ IMPORTANT
         );
 
         _history.add(result);
 
-        if (item['type'] == 'presence') {
+        if (item['type'] == DetectionType.presence.name) {
           presenceHistory.add(result);
         } else {
           activityHistory.add(result);
         }
       } catch (_) {
-        // skip bad data
+        // Skip corrupted entries
       }
     }
   }
@@ -127,7 +139,6 @@ class DetectionHistoryManager {
     _history.clear();
     presenceHistory.clear();
     activityHistory.clear();
-
     await _box.clear();
   }
 
@@ -137,5 +148,15 @@ class DetectionHistoryManager {
 
   void clearActivity() {
     activityHistory.clear();
+  }
+
+  // ============================================================
+  // 🛠 HELPERS
+  // ============================================================
+
+  void _trimList(List<DetectionResult> list, int maxItems) {
+    if (list.length > maxItems) {
+      list.removeRange(0, list.length - maxItems);
+    }
   }
 }

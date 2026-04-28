@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:csi_sense/core/config/app_settings.dart';
 import 'package:csi_sense/core/features/home/live_detection/controllers/detection_controller.dart';
 import 'package:csi_sense/core/config/app_mode.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -16,6 +17,14 @@ class SettingsScreen extends StatelessWidget {
     final TextEditingController apiController = TextEditingController(
       text: settings.apiBaseUrl,
     );
+
+    Future<void> openLink(String url) async {
+      final uri = Uri.parse(url);
+
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $url';
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text("Settings"), centerTitle: true),
@@ -96,10 +105,16 @@ class SettingsScreen extends StatelessWidget {
             icon: const Icon(Icons.save),
             label: const Text("Save API URL"),
             onPressed: () {
-              settings.updateApiUrl(apiController.text.trim());
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text("API URL saved")));
+              final url = apiController.text.trim();
+
+              settings.updateApiUrl(url);
+
+              /// 🔥 START CONNECTION FLOW
+              controller.startConnecting(settings);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Connecting to API...")),
+              );
             },
           ),
 
@@ -211,8 +226,60 @@ class SettingsScreen extends StatelessWidget {
             title: const Text("Live Status"),
             subtitle: Text(controller.isLiveActive ? "ACTIVE" : "IDLE"),
           ),
+          Column(
+            children: [
+              Wrap(
+                alignment: WrapAlignment.center,
+                children: [
+                  const Text(
+                    "Crafted with ❤️ by ",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      openLink("https://www.linkedin.com/in/suryapratik/");
+                    },
+                    child: const Text(
+                      "Surya Pratik",
+                      style: TextStyle(
+                        color: Colors.blueAccent,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'for ECS-2 "Human Detection using Wi-Fi CSI"',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 10),
 
-          const ListTile(title: Text("Version"), subtitle: Text("1.0.0")),
+              GestureDetector(
+                onTap: () {
+                  openLink("https://github.com/xeyynon/CSI-Sense");
+                },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.code, size: 18, color: Colors.grey),
+                    SizedBox(width: 5),
+                    Text(
+                      "View Source",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -40,7 +40,7 @@ class _HistoryRadarScreenState extends State<HistoryRadarScreen> {
     });
   }
 
-  void startReplay() {
+  void startReplay() async {
     final controller = context.read<DetectionController>();
     final data = getData(controller);
 
@@ -48,20 +48,25 @@ class _HistoryRadarScreenState extends State<HistoryRadarScreen> {
 
     _timer?.cancel();
 
-    _timer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
-      if (currentIndex >= data.length) {
-        timer.cancel();
-        return;
-      }
+    currentIndex = 0;
 
-      final result = data[currentIndex];
+    for (int i = 0; i < data.length - 1; i++) {
+      if (!mounted) return;
+
+      final current = data[i];
+      final next = data[i + 1];
 
       setState(() {
-        currentPoints = _convertToPoints(result);
+        currentPoints = _convertToPoints(current);
+        currentIndex = i;
       });
 
-      currentIndex++;
-    });
+      final delay = next.timestamp.difference(current.timestamp);
+
+      await Future.delayed(
+        delay.inMilliseconds > 0 ? delay : const Duration(milliseconds: 500),
+      );
+    }
   }
 
   List<DetectionPoint> _convertToPoints(result) {
@@ -72,16 +77,17 @@ class _HistoryRadarScreenState extends State<HistoryRadarScreen> {
 
       return [DetectionPoint(x: 0.5, y: normalizedY)];
     } else {
-      /// 🔥 ACTIVITY MODE
       if (result.activity <= 0) return [];
 
-      return List.generate(
-        result.activity.clamp(1, 5),
-        (_) => DetectionPoint(
-          x: (0.2 + (0.6 * (DateTime.now().millisecond % 100) / 100)),
-          y: (0.2 + (0.6 * (DateTime.now().millisecond % 100) / 100)),
-        ),
-      );
+      return List.generate(result.activity.clamp(1, 5), (index) {
+        final angle = (index / result.activity) * 3.14 * 2;
+        final radius = 0.3;
+
+        return DetectionPoint(
+          x: 0.5 + radius * (index.isEven ? 1 : -1),
+          y: 0.5 + radius * (index % 2 == 0 ? 1 : -1),
+        );
+      });
     }
   }
 

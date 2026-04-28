@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import '../home/live_detection/models/detection_mode.dart';
 import 'history_detail_screen.dart';
 
 class HistoryOptionsScreen extends StatelessWidget {
   final String title;
-  final String type;
+  final DetectionType type; // ✅ FIXED (enum)
 
   const HistoryOptionsScreen({
     super.key,
@@ -23,9 +24,7 @@ class HistoryOptionsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildCard(context, "Radar Replay", Icons.radar, true),
-
               const SizedBox(height: 20),
-
               _buildCard(context, "Detection Logs", Icons.list, false),
             ],
           ),
@@ -47,7 +46,7 @@ class HistoryOptionsScreen extends StatelessWidget {
           MaterialPageRoute(
             builder: (_) => HistoryDetailScreen(
               title: text,
-              type: type,
+              type: type, // ✅ enum passed
               isReplay: isReplay,
             ),
           ),
@@ -55,7 +54,9 @@ class HistoryOptionsScreen extends StatelessWidget {
       },
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 24),
           child: Column(

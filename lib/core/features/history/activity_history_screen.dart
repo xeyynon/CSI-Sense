@@ -7,20 +7,8 @@ import 'history_list_screen.dart';
 import 'history_radar_screen.dart';
 
 class ActivityHistoryScreen extends StatelessWidget {
-  const ActivityHistoryScreen({super.key});
-
-  String getActivityText(int activity) {
-    switch (activity) {
-      case 1:
-        return "Walking";
-      case 2:
-        return "Walking + Arm Movement";
-      case 3:
-        return "Running / High Activity";
-      default:
-        return "No Activity";
-    }
-  }
+  final DetectionType type;
+  const ActivityHistoryScreen({super.key, required this.type});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +22,7 @@ class ActivityHistoryScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () {
-              controller.clearHistory(); // ✅ unified clear
+              controller.clearHistory();
             },
           ),
         ],
@@ -77,7 +65,7 @@ class ActivityHistoryScreen extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => const HistoryListScreen(
-                                type: DetectionType.presence,
+                                type: DetectionType.activity, // ✅ FIXED
                               ),
                             ),
                           );
@@ -105,17 +93,19 @@ class ActivityHistoryScreen extends StatelessWidget {
                             color: Colors.orangeAccent,
                           ),
 
-                          /// 🔥 TITLE
-                          title: Text(getActivityText(item.activity)),
+                          /// ✅ USE API LABEL (FIXED)
+                          title: Text(item.label),
 
-                          /// 🔥 SUBTITLE
+                          /// 🔥 CONFIDENCE
                           subtitle: Text(
                             "Confidence: ${item.confidence.toStringAsFixed(1)}%",
                           ),
 
-                          /// 🔥 TIME
+                          /// ✅ CLEAN TIME FORMAT (FIXED)
                           trailing: Text(
-                            item.timestamp.toLocal().toString().split('.')[0],
+                            TimeOfDay.fromDateTime(
+                              item.timestamp,
+                            ).format(context),
                             style: const TextStyle(fontSize: 12),
                           ),
                         ),

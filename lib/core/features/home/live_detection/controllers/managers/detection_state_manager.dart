@@ -9,8 +9,10 @@ class DetectionStateManager {
   List<DetectionPoint> points = [];
   double confidence = 0;
   DetectionResult? currentResult;
+  bool isPinging = false;
 
   void update(DetectionResult result, DetectionType type) {
+    isPinging = true;
     currentResult = result;
 
     if (type == DetectionType.presence) {
@@ -21,11 +23,7 @@ class DetectionStateManager {
           DetectionPoint(x: 0.4 + _random.nextDouble() * 0.2, y: normalizedY),
         ];
 
-        final baseConfidence = 100 - (normalizedY * 50);
-        confidence = ((confidence * 0.7) + (baseConfidence * 0.3)).clamp(
-          0,
-          100,
-        );
+        confidence = result.confidence;
       } else {
         points = <DetectionPoint>[];
         confidence = (confidence * 0.7).clamp(0, 100);
@@ -44,14 +42,15 @@ class DetectionStateManager {
           );
         });
 
-        confidence = ((confidence * 0.6) + (result.activity * 10)).clamp(
-          0,
-          100,
-        );
+        confidence = result.confidence;
       } else {
         points = <DetectionPoint>[];
         confidence = (confidence * 0.7).clamp(0, 100);
       }
     }
+
+    Future.delayed(const Duration(milliseconds: 800), () {
+      isPinging = false;
+    });
   }
 }

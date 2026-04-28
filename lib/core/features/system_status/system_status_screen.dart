@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../home/live_detection/controllers/detection_controller.dart';
 import '../../config/app_settings.dart';
-import '../../config/app_mode.dart';
 
 class SystemStatusScreen extends StatelessWidget {
   const SystemStatusScreen({super.key});
@@ -24,7 +23,7 @@ class SystemStatusScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            /// 🔥 API CONNECTION (MAIN)
+            /// 🔥 API CONNECTION
             _buildCard(
               title: "API Connection",
               child: Column(
@@ -40,17 +39,25 @@ class SystemStatusScreen extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
+                  /// 🔥 ACTION BUTTONS
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.save),
-                          label: const Text("Save"),
+                          label: const Text("Save & Connect"),
                           onPressed: () {
-                            settings.updateApiUrl(apiController.text.trim());
+                            final url = apiController.text.trim();
+
+                            settings.updateApiUrl(url);
+
+                            /// 🔥 START CONNECTION FLOW
+                            controller.startConnecting(settings);
 
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("API URL Saved")),
+                              const SnackBar(
+                                content: Text("Connecting to API..."),
+                              ),
                             );
                           },
                         ),
@@ -59,12 +66,14 @@ class SystemStatusScreen extends StatelessWidget {
                       Expanded(
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.refresh),
-                          label: const Text("Reconnect"),
+                          label: const Text("Retry"),
                           onPressed: () {
-                            controller.updateMode(settings.mode, settings);
+                            controller.startConnecting(settings);
 
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Reconnecting...")),
+                              const SnackBar(
+                                content: Text("Retrying connection..."),
+                              ),
                             );
                           },
                         ),
@@ -72,28 +81,47 @@ class SystemStatusScreen extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
 
-                  /// 🔥 STATUS
+                  /// 🔥 CONNECTION STATUS CHIP
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text("Connection Status"),
-                      _statusChip(
-                        controller.apiConnected ? "Connected" : "Disconnected",
-                        controller.apiConnected ? Colors.green : Colors.red,
-                      ),
+                      _statusChip(controller),
                     ],
                   ),
 
-                  /// 🔥 COUNTDOWN
-                  if (!controller.apiConnected &&
-                      settings.mode == AppMode.online)
+                  const SizedBox(height: 10),
+
+                  /// 🔥 LIVE PING INDICATOR
+                  Row(
+                    children: [
+                      const Text("Live Ping: "),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: controller.isPinging
+                              ? Colors.greenAccent
+                              : Colors.grey,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(controller.isPinging ? "Receiving data..." : "Idle"),
+                    ],
+                  ),
+
+                  /// 🔥 COUNTDOWN (ONLY DURING CONNECTING)
+                  if (controller.connectionState ==
+                      ConnectionStateStatus.connecting)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.only(top: 10),
                       child: Text(
-                        "Switching to offline in ${controller.remainingSeconds}s",
-                        style: const TextStyle(color: Colors.redAccent),
+                        "Retrying... ${controller.remainingSeconds}s left",
+                        style: const TextStyle(color: Colors.orange),
                       ),
                     ),
                 ],
@@ -119,7 +147,7 @@ class SystemStatusScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text("Status"),
-                  _statusChip(
+                  _simpleChip(
                     controller.isLiveActive ? "Running" : "Stopped",
                     controller.isLiveActive ? Colors.green : Colors.grey,
                   ),
@@ -161,6 +189,65 @@ class SystemStatusScreen extends StatelessWidget {
     );
   }
 
+  /// 🔥 STATUS CHIP WITH STATES
+  Widget _statusChip(DetectionController controller) {
+    String text;
+    Color color;
+
+    switch (controller.connectionState) {
+      case ConnectionStateStatus.connected:
+        text = "Connected";
+        color = Colors.green;
+        break;
+
+      case ConnectionStateStatus.connecting:
+        text = "Connecting";
+        color = Colors.orange;
+        break;
+
+      case ConnectionStateStatus.disconnected:
+        text = "Disconnected";
+        color = Colors.red;
+        break;
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          /// 🔥 BLINKING DOT
+          AnimatedOpacity(
+            opacity:
+                controller.connectionState == ConnectionStateStatus.connecting
+                ? 1
+                : 0.6,
+            duration: const Duration(milliseconds: 500),
+            child: Icon(Icons.circle, color: color, size: 10),
+          ),
+          const SizedBox(width: 6),
+          Text(text, style: TextStyle(color: color)),
+        ],
+      ),
+    );
+  }
+
+  /// 🔥 SIMPLE CHIP
+  Widget _simpleChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(text, style: TextStyle(color: color)),
+    );
+  }
+
   /// 🔥 CARD
   Widget _buildCard({required String title, required Widget child}) {
     return Card(
@@ -185,18 +272,6 @@ class SystemStatusScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  /// 🔥 STATUS CHIP
-  Widget _statusChip(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(text, style: TextStyle(color: color)),
     );
   }
 

@@ -20,17 +20,15 @@ class DetectionStreamManager {
     _service = service;
     isRunning = true;
 
-    if (_service == null) return;
-
     _subscription = _service!.getDetectionStream().listen(
       (result) {
-        onData(result); // ✅ ONLY DATA
+        onData(result);
       },
       onError: (error) {
         onError(error);
       },
       onDone: () {
-        onError(Exception("Stream closed"));
+        isRunning = false; // ✅ FIXED
       },
       cancelOnError: false,
     );
