@@ -21,9 +21,9 @@ CSI Sense is a **complete end-to-end intelligent monitoring system** that detect
 ##  Preview
 
 <p align="center">
-  <img src="screenshots/home.png" width="250"/>
-  <img src="screenshots/live.png" width="250"/>
-  <img src="screenshots/history.png" width="250"/>
+  <img src="assets/home.png" width="230"/>
+  <img src="assets/live.png" width="230"/>
+  <img src="assets/history.png" width="230"/>
 </p>
 
 ---
