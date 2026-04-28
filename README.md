@@ -10,7 +10,7 @@ Human Presence & Activity Detection using Wi-Fi CSI + Mobile Monitoring
 
 ---
 
-## ✨ Overview
+##  Overview
 
 CSI Sense is a **complete end-to-end intelligent monitoring system** that detects human presence and activity using **Wi-Fi signals (CSI)** and visualizes the results in a **real-time mobile application**.
 
@@ -18,7 +18,7 @@ CSI Sense is a **complete end-to-end intelligent monitoring system** that detect
 
 ---
 
-## 📸 Preview
+##  Preview
 
 <p align="center">
   <img src="screenshots/home.png" width="250"/>
@@ -28,9 +28,9 @@ CSI Sense is a **complete end-to-end intelligent monitoring system** that detect
 
 ---
 
-## ⚡ Features
+## Features
 
-### 📱 Mobile Application
+###  Mobile Application
 
 * Real-time detection interface
 * Live monitoring dashboard
@@ -47,7 +47,7 @@ CSI Sense is a **complete end-to-end intelligent monitoring system** that detect
 
 ---
 
-## 🧠 System Architecture
+##  System Architecture
 
 ```text
 WiFi Router → ESP32 (CSI Capture) → Python Pipeline → Spectrograms → ML Model → Mobile App
@@ -61,7 +61,7 @@ WiFi Router → ESP32 (CSI Capture) → Python Pipeline → Spectrograms → ML 
 
 ---
 
-## 🧪 Core Concept
+##  Core Concept
 
 Human movement affects:
 
@@ -76,20 +76,20 @@ These changes are converted into **time-frequency spectrograms**:
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
-### 📱 Mobile
+###  Mobile
 
 * Flutter
 * Dart
 * Provider (State Management)
 
-### 💻 Backend / Processing
+###  Backend / Processing
 
 * Python (PyTorch, NumPy)
 * Spectrogram Processing Pipeline
 
-### 🔌 Hardware
+###  Hardware
 
 * ESP32-S3 (CSI Receiver)
 * Wi-Fi Router (Transmitter)
@@ -98,7 +98,7 @@ These changes are converted into **time-frequency spectrograms**:
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 lib/
 ├── core/
@@ -113,7 +113,7 @@ lib/
 
 ---
 
-## 🔥 Architecture Highlight (Mobile)
+##  Architecture Highlight (Mobile)
 
 The mobile app uses a **modular Detection Controller system**:
 
@@ -130,7 +130,7 @@ Ensures:
 
 ---
 
-## 🤖 Machine Learning
+##  Machine Learning
 
 * Model: EfficientNetV2-S
 * Input: CSI Spectrogram Images
@@ -148,26 +148,26 @@ Metrics:
 
 ---
 
-## 🌍 Applications
+##  Applications
 
-* 🏠 Smart Home Monitoring
-* 🚨 Disaster Rescue (detect trapped people)
-* 🛡️ Security & Surveillance
-* 🧠 Intelligent Environment Sensing
-
----
-
-## 🚀 System Status
-
-* ✅ Hardware implemented
-* ✅ CSI data acquisition working
-* ✅ ML model trained
-* ✅ Mobile app integrated
-* 🔄 Real-time optimization ongoing
+*  Smart Home Monitoring
+*  Disaster Rescue (detect trapped people)
+*  Security & Surveillance
+*  Intelligent Environment Sensing
 
 ---
 
-## 👨‍💻 Developed By
+##  System Status
+
+*  Hardware implemented
+*  CSI data acquisition working
+*  ML model trained
+*  Mobile app integrated
+*  Real-time optimization ongoing
+
+---
+
+## Flutter Application Developed By
 
 **Surya Pratik**
 
