@@ -38,7 +38,7 @@ CSI Sense is a **complete end-to-end intelligent monitoring system** that detect
 * System status visualization
 * Settings & configuration
 
-### 📡 Hardware & Detection System
+###  Hardware & Detection System
 
 * Wi-Fi CSI-based sensing
 * ESP32-based data acquisition
