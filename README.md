@@ -5,7 +5,7 @@ Human Presence & Activity Detection using Wi-Fi CSI + Mobile Monitoring
 </p>
 
 <p align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?size=24&duration=3000&color=00F7FF&center=true&vCenter=true&width=700&lines=WiFi+CSI+Sensing;Deep+Learning+Detection;Real-Time+Mobile+Monitoring"/>
+  <img src="https://readme-typing-svg.herokuapp.com?size=22&duration=3000&color=00F7FF&center=true&vCenter=true&width=700&lines=WiFi+Signal+Based+Human+Detection;CSI+Data+Processing+Pipeline;Deep+Learning+Activity+Recognition"/>
 </p>
 
 ---
