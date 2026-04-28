@@ -1,4 +1,4 @@
-<h1 align="center">📡📱 CSI Sense System</h1>
+<h1 align="center"> CSI Sense System</h1>
 
 <p align="center">
 Human Presence & Activity Detection using Wi-Fi CSI + Mobile Monitoring
